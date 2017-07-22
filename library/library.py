@@ -1,5 +1,3 @@
-cacheVersion = 4
-
 import threading
 import os, subprocess, re
 import config
@@ -9,11 +7,13 @@ import urllib
 import time
 from threading import Lock
 
-uniqueLock = Lock();
+cacheVersion = 4
+uniqueLock = Lock()
 counter = 0
 
 
 def utf8(s):
+    """Convert to UTF-8."""
     return s.encode("UTF-8")
 
 
@@ -77,9 +77,9 @@ def extractFrameAsJPG(d, start):
     cmdline.append("-ss")
     cmdline.append(str(start))
     cmdline.append("-i")
-    cmdline.append(d);
+    cmdline.append(d)
     cmdline.append("-vframes")
-    cmdline.append("1");
+    cmdline.append("1")
     cmdline.extend(config.ffmpeg_poster_args)
     FNULL = open(os.devnull, 'w')
     proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=FNULL)
@@ -210,8 +210,8 @@ def library(path):
 
     return meta
 
-  
-def getType(path):  
+
+def getType(path):
     d = mapPath(path)
 
 
@@ -220,7 +220,7 @@ def getDuration(path):
     cmdline = list()
     cmdline.append(config.ffmpeg)
     cmdline.append("-i")
-    cmdline.append(d);
+    cmdline.append(d)
     duration = -1
     FNULL = open(os.devnull, 'w')
     proc = subprocess.Popen(cmdline, stderr=subprocess.PIPE, stdout=FNULL)
@@ -238,42 +238,41 @@ def getDuration(path):
 
 
 def transcodeMime(format):
+    """Translate file format to Mime type."""
     return config.transcode_mime.get(format) or config.transcode_mime["*"]
 
 
 def transcode(path, start, format, vcodec, acodec):
+    """Transcode in ffmpeg subprocess."""
     d = mapPath(path)
-    dummy, ext = os.path.splitext(d)
+    _, ext = os.path.splitext(d)
     ext = ext[1:]
-    args = config.ffmpeg_transcode_args.get(ext) or config.ffmpeg_transcode_args["*"]
-    cmdline = list()
-    cmdline.append(config.ffmpeg)
-    cmdline.append("-ss")
-    cmdline.append(str(start))
-    cmdline.append("-i")
-    cmdline.append(d)
-    cmdline.append("-f")
-    cmdline.append(format)
-    if vcodec:
-        if vcodec == "none":
-            cmdline.append("-vn")
-        else:
-            cmdline.append("-vcodec")
-            cmdline.append(vcodec)
-    if acodec:
-        cmdline.append("-acodec")
-        cmdline.append(acodec)
-    cmdline.append("-strict")
-    cmdline.append("experimental")
-    cmdline.append("-preset")
-    cmdline.append("ultrafast")
-    cmdline.append("-movflags")
-    cmdline.append("empty_moov+faststart+frag_keyframe") # +
-    cmdline.append("pipe:1")
-    print(" ".join(cmdline))
+    # args = config.ffmpeg_transcode_args.get(ext) or
+    args = config.ffmpeg_transcode_args["*"]
+
+    # MASIVE RISK OF SHELL INJECTION!!!!!!!
+    # fix with "in array"
+    cmdline = config.ffmpeg+args.format(str(start), d, format, vcodec, acodec)
+
+    # TODO:
+    # make cmdline dynamic
+    # add -vn
+    # make acodec optional
+
+    #if vcodec:
+    #    if vcodec == "none":
+    #        cmdline.append("-vn")
+    #    else:
+    #        cmdline.append("-vcodec")
+    #        cmdline.append(vcodec)
+    #if acodec:
+    #    cmdline.append("-acodec")
+    #    cmdline.append(acodec)
+
+    print(cmdline)
 
     FNULL = open(os.devnull, 'w')
-    proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE)#, stderr=FNULL)
+    proc = subprocess.Popen(cmdline.split(), stdout=subprocess.PIPE)  # , stderr=FNULL)
     try:
         f = proc.stdout
         byte = f.read(65536)
@@ -301,7 +300,8 @@ def refreshLoop():
 
         time.sleep(3600)
 
+
 def init():
     t = threading.Thread(target=refreshLoop)
-    t.daemon = True # stop if the program exits
+    t.daemon = True  # stop if the program exits
     t.start()

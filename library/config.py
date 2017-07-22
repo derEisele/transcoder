@@ -1,17 +1,18 @@
-port= 			8124
+"""Config file."""
+
+port = 8124
 
 # library config
 
-media_folder= 	"/mnt/stuff/Public/"
-root_items=		[ { "name": "Eltern", "target": "Shared Videos/Videos/Eltern" }, { "name": "Kinder", "target": "Shared Videos/Videos/Kinder" }, { "name": "Music", "target": "Shared Music" }, {"name": "Test Music", "target": "/home/daniel/Music"}, {"name": "Test Video", "target": "/home/daniel/TEST"} ]
-
-media_folder= 	"/mnt/Public/"
-root_items=		[ { "name": "Eltern", "target": "Shared Videos/Videos/Eltern" }, { "name": "Aufnahmen", "target": "Shared Videos/Aufnahmen2" }, { "name": "Kinder", "target": "Shared Videos/Videos/Kinder" }, { "name": "Music", "target": "Shared Music" }, { "name": "Fotos", "target": "Shared Pictures" } ]
+media_folder = "/media/hdd1/TV"
+root_items = [{"name": "The-Flash", "target": "/media/hdd1/TV/The-Flash"},
+              {"name": "Test", "target": "/home/alexander/tmp/test-media"},
+              {"name": "TBBT", "target": "/media/hdd1/TV/The-Big-Bang-Theory"}]
 
 
 # transcoder config
 
-ffmpeg= 		"ffmpeg"
+ffmpeg = "ffmpeg"
 
 types = {
     "mp3": "audio",
@@ -19,15 +20,19 @@ types = {
     "mp4": "video"}
 
 
-transcode_mime = { 
-    "*" : "video/mp4",
+transcode_mime = {
+    "*": "video/mp4",
     "mp3": "audio/mp3",
     "jpg": "image/jpg"}
 
 
-ffmpeg_transcode_args = {
-    "*" : [ "-f", "mp4", "-strict", "experimental", "-preset", "ultrafast", "-movflags", "frag_keyframe+empty_moov+faststart", "pipe:1" ],
-    "mp3": [ "-f", "mp3", "-codec", "copy", "pipe:1" ] }
+ffmpeg_transcode_args_2 = {
+    "*": ["-f", "mp4", "-strict", "experimental", "-preset", "ultrafast", "-movflags", "frag_keyframe+empty_moov+faststart", "pipe:1"],
+    "mp3": ["-f", "mp3", "-codec", "copy", "pipe:1"]}
 
-ffmpeg_poster_args = [ "-f", "mjpeg", "-vf", "scale=512x512", "pipe:1" ]
+ffmpeg_transcode_args = {
+    "*": " -ss {} -i {} -f {} -vcodec {} -acodec {} -strict experimental -preset ultrafast -movflags frag_keyframe+empty_moov+faststart pipe:1",
+    "mp3": ["-f", "mp3", "-codec", "copy", "pipe:1"]}
+
+ffmpeg_poster_args = ["-f", "mjpeg", "-vf", "scale=512x512", "pipe:1"]
 # "-noaccurate_seek"
