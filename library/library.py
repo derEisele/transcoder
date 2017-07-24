@@ -1,5 +1,9 @@
+"""Deals with metadata and icons."""
+
 import threading
-import os, subprocess, re
+import os
+import subprocess
+import re
 import config
 import hashlib
 import pickle
@@ -18,6 +22,7 @@ def utf8(s):
 
 
 def unique():
+    """Return unique identification number."""
     global uniqueLock
     global counter
     with uniqueLock:
@@ -26,6 +31,7 @@ def unique():
 
 
 def mapPath(path):
+    """Map web path to file path."""
     # extract root folder
     path = os.path.normpath(path)
     path = path.split("/")
@@ -45,6 +51,7 @@ def mapPath(path):
 
 
 def indexFile(path):
+    """Index File and creat metadata file."""
     d = mapPath(path)
     key = "cache/" + hashlib.md5(utf8(path)).hexdigest() + ".meta"
 
@@ -72,6 +79,7 @@ def indexFile(path):
 
 
 def extractFrameAsJPG(d, start):
+    """Return frame of video as jpeg."""
     cmdline = list()
     cmdline.append(config.ffmpeg)
     cmdline.append("-ss")
@@ -96,6 +104,7 @@ def extractFrameAsJPG(d, start):
 
 
 def icon(path):
+    """Read and yield chunks of icon file."""
     infile = iconFile(path)
     try:
         byte = infile.read(65536)
@@ -107,6 +116,7 @@ def icon(path):
 
 
 def iconFile(path):
+    """Read and create icon file."""
     key = "cache/" + hashlib.md5(utf8(path)).hexdigest() + ".icon"
 
     d = mapPath(path)
@@ -139,7 +149,6 @@ def iconFile(path):
                 # couldn't find any jpg, try the folders
                 for f in os.listdir(d):
                     if not os.path.isfile(f):
-                        empty = True
                         sub = iconFile(path + "/" + f)
                         if len(sub.peek(1)) > 0:
                             return sub
@@ -156,6 +165,7 @@ def iconFile(path):
 
 
 def libraryMeta(path, details):
+    """Provide meatadata for given path."""
     meta = dict()
 
     # handle root
@@ -187,6 +197,7 @@ def libraryMeta(path, details):
 
 
 def library(path):
+    """Wrapp for libraryMeta."""
     meta = libraryMeta(path, True)
 
     # handle root
@@ -211,11 +222,8 @@ def library(path):
     return meta
 
 
-def getType(path):
-    d = mapPath(path)
-
-
 def getDuration(path):
+    """Figure out duration of a media file using FFmpeg."""
     d = mapPath(path)
     cmdline = list()
     cmdline.append(config.ffmpeg)
@@ -250,28 +258,27 @@ def transcode(path, start, format, vcodec, acodec):
     # args = config.ffmpeg_transcode_args.get(ext) or
     args = config.ffmpeg_transcode_args["*"]
 
-    # MASIVE RISK OF SHELL INJECTION!!!!!!!
-    # fix with "in array"
-    cmdline = config.ffmpeg+args.format(str(start), d, format, vcodec, acodec)
+    cmdline = config.ffmpeg + args.format(str(start), d, format, vcodec, acodec)
 
     # TODO:
     # make cmdline dynamic
     # add -vn
     # make acodec optional
 
-    #if vcodec:
-    #    if vcodec == "none":
-    #        cmdline.append("-vn")
-    #    else:
-    #        cmdline.append("-vcodec")
-    #        cmdline.append(vcodec)
-    #if acodec:
-    #    cmdline.append("-acodec")
-    #    cmdline.append(acodec)
+    """if vcodec:
+        if vcodec == "none":
+            cmdline.append("-vn")
+        else:
+            cmdline.append("-vcodec")
+            cmdline.append(vcodec)
+    if acodec:
+        cmdline.append("-acodec")
+        cmdline.append(acodec)
+    """
 
     print(cmdline)
 
-    FNULL = open(os.devnull, 'w')
+    # FNULL = open(os.devnull, 'w')
     proc = subprocess.Popen(cmdline.split(), stdout=subprocess.PIPE)  # , stderr=FNULL)
     try:
         f = proc.stdout
@@ -284,16 +291,19 @@ def transcode(path, start, format, vcodec, acodec):
 
 
 def refreshLoop():
+    """Refresh library every hour."""
     def refresh(path):
+        """Refresh path (file and directories)."""
         iconFile(path).close()
         entry = library(path)
+
         if not entry["file"]:
+            # Recrusive indexing
             for child in entry["items"]:
                 refresh(child["path"])
 
     while True:
         print("Refreshing")
-        items = []
         for item in config.root_items:
             refresh(item["name"])
         print("Refresh done")
@@ -302,6 +312,7 @@ def refreshLoop():
 
 
 def init():
+    """Start library loading in new thread."""
     t = threading.Thread(target=refreshLoop)
     t.daemon = True  # stop if the program exits
     t.start()

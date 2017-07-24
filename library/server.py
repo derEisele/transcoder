@@ -1,7 +1,7 @@
-from flask import Flask, request, Response, abort, send_file, jsonify
-import os, subprocess, re
+"""Main file and sets up flask."""
+
+from flask import Flask
 import config as C
-import library as L
 import web
 import restlibrary
 from werkzeug.routing import BaseConverter
@@ -12,7 +12,10 @@ app = Flask(__name__)
 
 
 class RegexConverter(BaseConverter):
+    """Regex Converter for routing in Flask."""
+
     def __init__(self, url_map, *items):
+        """Init RegexConverter."""
         super(RegexConverter, self).__init__(url_map)
         self.regex = items[0]
 
