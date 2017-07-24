@@ -3,3 +3,4 @@ cache/
 private/
 __pycache__
 *.pyc
+mediaconf.py

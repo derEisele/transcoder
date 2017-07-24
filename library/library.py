@@ -5,6 +5,7 @@ import os
 import subprocess
 import re
 import config
+import mediaconf
 import hashlib
 import pickle
 import urllib
@@ -40,14 +41,14 @@ def mapPath(path):
 
     # map root folder
     base = None
-    for item in config.root_items:
+    for item in mediaconf.root_items:
         if item["name"] == root:
             base = item["target"]
             break
     if base is None:
         raise FileNotFoundError()
 
-    return os.path.join(config.media_folder, base + "/" + path if path != "" else base)
+    return os.path.join(mediaconf.media_folder, base + "/" + path if path != "" else base)
 
 
 def indexFile(path):
@@ -203,7 +204,7 @@ def library(path):
     # handle root
     if path == "":
         items = []
-        for item in config.root_items:
+        for item in mediaconf.root_items:
             child = libraryMeta(item["name"], False)
             items.append(child)
         meta["items"] = items
@@ -304,7 +305,7 @@ def refreshLoop():
 
     while True:
         print("Refreshing")
-        for item in config.root_items:
+        for item in mediaconf.root_items:
             refresh(item["name"])
         print("Refresh done")
 

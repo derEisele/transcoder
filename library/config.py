@@ -2,14 +2,6 @@
 
 port = 8124
 
-# library config
-
-media_folder = "/media/hdd1/TV"
-root_items = [{"name": "The-Flash", "target": "/media/hdd1/TV/The-Flash"},
-              {"name": "Test", "target": "/home/alexander/tmp/test-media"},
-              {"name": "TBBT", "target": "/media/hdd1/TV/The-Big-Bang-Theory"}]
-
-
 # transcoder config
 
 ffmpeg = "ffmpeg"
